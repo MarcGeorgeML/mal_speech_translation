@@ -226,3 +226,8 @@ zeromq                    4.3.5                ha9f60a1_7    conda-forge
 zipp                      3.23.0             pyhd8ed1ab_0    conda-forge
 zstandard                 0.23.0          py310ha8f682b_2    conda-forge
 zstd                      1.5.7                hbeecb71_2    conda-forge
+cudatoolkit==11.8.0
+torch==2.1.0+cu118
+torchvision==0.16.0+cu118
+torchaudio==2.1.0+cu118
+--extra-index-url https://download.pytorch.org/whl/cu118
