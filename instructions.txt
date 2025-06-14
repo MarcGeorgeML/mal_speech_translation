@@ -1,0 +1,6 @@
+conda create -n myenv python=3.XX
+conda activate myenv
+
+conda install --file requirements.txt -c conda-forge
+
+pip install -r requirements.txt
