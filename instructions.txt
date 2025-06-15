@@ -1,6 +1,16 @@
-conda create -n myenv python=3.XX
+# 1. Create a new environment with Python 3.10
+conda create -n myenv python=3.10 -y
+
+# 2. Activate the environment
 conda activate myenv
 
-conda install --file requirements.txt -c conda-forge
+# 3. Install PyTorch with CUDA 12.1 support
+conda install -y pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 
-pip install -r requirements.txt
+# 4. Install scientific and audio packages from conda-forge
+conda install -y -c conda-forge numpy scipy matplotlib librosa ffmpeg
+
+# 5. Install all specified packages using pip (with versions where specified)
+pip install tqdm rich platformdirs ctranslate2 tokenizers huggingface-hub accelerate optimum transformers openai-whisper nvidia-ml-py soundfile sounddevice whisper-s2t
+
+
