@@ -7,11 +7,16 @@ import preprocess
 importlib.reload(preprocess)
 from preprocess import preprocess_audio
 
-def split_audio(input_path, chunk_duration=30):
-    audio, sr = librosa.load(input_path, sr=None, mono=True)
+def process_and_save(args):
+    i, chunk, sr, temp_dir = args
+    processed_audio, _ = preprocess_audio(chunk, sr, None)
+    out_path = os.path.join(temp_dir, f"chunk_{i}_processed.wav")
+    sf.write(out_path, processed_audio, sr)
+    return out_path
+
+def split_audio(audio, sr, chunk_duration=30):
     total_samples = len(audio)
     chunk_samples = int(chunk_duration * sr)
-    # If audio is shorter than chunk_duration, return as a single chunk
     if total_samples <= chunk_samples:
         return [audio], sr
     chunks = []
@@ -19,27 +24,21 @@ def split_audio(input_path, chunk_duration=30):
         end = min(start + chunk_samples, total_samples)
         chunk = audio[start:end]
         if len(chunk) < chunk_samples:
-            # Optionally pad the last chunk
             pad_width = chunk_samples - len(chunk)
             chunk = np.pad(chunk, (0, pad_width), mode='constant')
         chunks.append(chunk)
     return chunks, sr
 
-def process_chunks(input_path, output_path, temp_dir="temp_chunks", chunk_duration=30):
+def process_chunks(input_path, temp_dir="temp_chunks", chunk_duration=30):
+    import concurrent.futures
+
     os.makedirs(temp_dir, exist_ok=True)
-    chunks, sr = split_audio(input_path, chunk_duration)
-    processed_chunks = []
-    for i, chunk in enumerate(chunks):
-        temp_in = os.path.join(temp_dir, f"chunk_{i}.wav")
-        temp_out = os.path.join(temp_dir, f"chunk_{i}_processed.wav")
-        sf.write(temp_in, chunk, sr)
-        processed_audio, _ = preprocess_audio(temp_in, temp_out)
-        processed_chunks.append(processed_audio)
-    # Concatenate all processed chunks
-    merged_audio = np.concatenate(processed_chunks)
-    sf.write(output_path, merged_audio, sr)
-    print(f"Saved merged processed audio to {output_path}")
-    return merged_audio, sr
-    
-# split_audio("test2.wav", chunk_duration=30)
-# process_chunks("test2.wav", "output.wav", chunk_duration=30)
+    audio, sr = librosa.load(input_path, sr=None, mono=True)
+    chunks, sr = split_audio(audio, sr, chunk_duration)
+    args_list = [(i, chunk, sr, temp_dir) for i, chunk in enumerate(chunks)]
+
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        chunk_paths = list(executor.map(process_and_save, args_list))
+
+    print(f"Processed and saved {len(chunk_paths)} chunks to {temp_dir}")
+    return chunk_paths, sr

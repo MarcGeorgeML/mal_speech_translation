@@ -8,22 +8,13 @@ import noisereduce as nr
 import soundfile as sf
 
 def preprocess_audio(
-    input_path,
-    output_path,
+    input,
+    s,
+    output_path=None
 ):
     
-    #load the audio file
-    s = sf.info(input_path).samplerate
-    audio, _ = librosa.load(input_path, sr=s, mono=True)
-    print(f"Loaded audio shape: {audio.shape}, Sample Rate: {s}")
-
-    # Play original audio
-    sd.play(audio, s)
-    sd.wait()  # Wait until playback is finished
-
-
     # trimming the audio to remove silence
-    trim_audio, _= librosa.effects.trim(audio)
+    trim_audio, _= librosa.effects.trim(input)
 
     # slowing down or speeding up the audio
     def estimate_speech_rate(y, sr):
@@ -54,7 +45,7 @@ def preprocess_audio(
         print(f"Original length: {original_len}, Processed length: {len(y)}")
         return y
 
-    tempo_audio = process_speed(audio, s)
+    tempo_audio = process_speed(trim_audio, s)
 
 
     # Design a band-pass filter for the midrange (1khz - 8khz)
@@ -76,12 +67,7 @@ def preprocess_audio(
     nyquist = 0.5 * s
     normal_cutoff = 10000 / nyquist
     b, a = butter(4, normal_cutoff, btype='low', analog=False)
-    lp_filtered_audio = filtfilt(b, a, hp_filtered_audio)
-
-
-    # # Noise reduction using spectral gating
-    # reduced_audio = nr.reduce_noise(y=lp_filtered_audio, sr=s, stationary=False)
-        
+    lp_filtered_audio = filtfilt(b, a, hp_filtered_audio)        
 
     # Boost volume by a factor (e.g., 2.0 for double the volume)
     gain = 1.7
@@ -99,12 +85,4 @@ def preprocess_audio(
     # Print RMS and dB level
     print(f"RMS dB level: {db:.2f} dBFS")
 
-    # saving the processed audio
-    sf.write(output_path, norm_audio, s)
-    
-    # Play processed audio
-    sd.play(norm_audio,s)
-    sd.wait()  # Wait until playback is finished
-    
     return norm_audio, s
-# preprocess_audio("test2.wav","out.wav")
