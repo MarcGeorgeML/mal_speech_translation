@@ -17,13 +17,13 @@ def preprocess_audio(
     audio, _ = librosa.load(input_path, sr=s, mono=True)
     print(f"Loaded audio shape: {audio.shape}, Sample Rate: {s}")
 
-    # # Play original audio
-    # sd.play(audio, sr)
-    # sd.wait()  # Wait until playback is finished
+    # Play original audio
+    sd.play(audio, s)
+    sd.wait()  # Wait until playback is finished
 
 
-    # # trimming the audio to remove silence
-    # trim_audio, _= librosa.effects.trim(audio)
+    # trimming the audio to remove silence
+    trim_audio, _= librosa.effects.trim(audio)
 
     # slowing down or speeding up the audio
     def estimate_speech_rate(y, sr):
@@ -66,15 +66,11 @@ def preprocess_audio(
     # Boost midrange and mix with original
     boosted = tempo_audio + 0.2 * midrange
 
-
-    # boosting midrange frequencies
-    # filt_audio = librosa.effects.preemphasis(tempo_audio, coef=0.97)
-
     # apply high-pass filter to remove low-frequency noise(60hz)
     nyquist = 0.5 * s
     normal_cutoff = 20 / nyquist
     b, a = butter(4, normal_cutoff, btype='high', analog=False)
-    hp_filtered_audio = filtfilt(b, a, boosted)
+    hp_filtered_audio = filtfilt(b, a, tempo_audio)
 
     # apply low-pass filter to remove high-frequency noise(10khz)
     nyquist = 0.5 * s
@@ -84,12 +80,12 @@ def preprocess_audio(
 
 
     # # Noise reduction using spectral gating
-    reduced_audio = nr.reduce_noise(y=lp_filtered_audio, sr=s, stationary=False)
+    # reduced_audio = nr.reduce_noise(y=lp_filtered_audio, sr=s, stationary=False)
         
 
     # Boost volume by a factor (e.g., 2.0 for double the volume)
     gain = 1.7
-    boosted_audio = reduced_audio * gain
+    boosted_audio = lp_filtered_audio * gain
 
     # applying clip to prevent clipping
     clip_audio = np.clip(boosted_audio, -1.0, 1.0)
@@ -105,6 +101,10 @@ def preprocess_audio(
 
     # saving the processed audio
     sf.write(output_path, norm_audio, s)
+    
+    # Play processed audio
+    sd.play(norm_audio,s)
+    sd.wait()  # Wait until playback is finished
     
     return norm_audio, s
 # preprocess_audio("test2.wav","out.wav")

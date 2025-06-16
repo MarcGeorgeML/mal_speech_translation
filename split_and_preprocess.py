@@ -2,6 +2,9 @@ import librosa
 import numpy as np
 import soundfile as sf
 import os
+import importlib
+import preprocess 
+importlib.reload(preprocess)
 from preprocess import preprocess_audio
 
 def split_audio(input_path, chunk_duration=30):
@@ -38,5 +41,5 @@ def process_chunks(input_path, output_path, temp_dir="temp_chunks", chunk_durati
     print(f"Saved merged processed audio to {output_path}")
     return merged_audio, sr
     
-split_audio("test2.wav", chunk_duration=30)
-process_chunks("test2.wav", "output.wav", chunk_duration=30)
+# split_audio("test2.wav", chunk_duration=30)
+# process_chunks("test2.wav", "output.wav", chunk_duration=30)
