@@ -9,8 +9,7 @@ import soundfile as sf
 
 def preprocess_audio(
     input,
-    s,
-    output_path=None
+    s
 ):
     
     # trimming the audio to remove silence
